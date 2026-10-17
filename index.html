@@ -36,8 +36,7 @@
   .times { color:var(--faint); font-weight:600; }
   .nav { display:flex; gap:14px; margin-top:36px; }
   .nav button { height:56px; border:0; border-radius:14px; font:inherit; font-size:1.4rem; cursor:pointer; }
-  #prev { width:100px; background:var(--line); color:#fff; }
-  #next { flex:1; background:var(--blue); color:#fff; font-weight:600; }
+  #clear { flex:1; background:var(--blue); color:#fff; font-weight:600; }
   #out { margin-top:32px; text-align:center; min-height:130px; }
   .win { font-size:1.5rem; font-weight:700; color:var(--good); }
   .sub { margin-top:6px; }
@@ -52,7 +51,7 @@
 </head>
 <body>
 <div class="app">
-  <div class="head"><button id="info" aria-label="วิธีใช้">i</button><button id="clear">Clear</button></div>
+  <div class="head"><button id="info" aria-label="วิธีใช้">i</button></div>
 
   <div id="help">
     <b>วิธีใช้</b><br>
@@ -77,7 +76,7 @@
     <input id="c2" inputmode="decimal" autocomplete="off" aria-label="C cost">
   </div>
 
-  <div class="nav"><button id="prev">‹</button><button id="next">Next ›</button></div>
+  <div class="nav"><button id="clear">Clear</button></div>
   <div id="out"></div>
 </div>
 
@@ -114,15 +113,8 @@ ids.forEach((id, k) => {
     if (id[1] !== '0' && $(id).value.trim() !== '' && ea.value.trim() === '') ea.value = '1';
     update();
   });
-  $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(1); } });
   $(id).addEventListener('focus', e => e.target.select());
 });
-let cur = 0;
-ids.forEach((id, k) => $(id).addEventListener('focus', () => cur = k));
-const go = d => $(ids[(cur + d + ids.length) % ids.length]).focus();
-['next', 'prev'].forEach(b => $(b).addEventListener('pointerdown', e => e.preventDefault()));
-$('next').onclick = () => go(1);
-$('prev').onclick = () => go(-1);
 $('clear').onclick = () => { ids.forEach(i => $(i).value = ''); update(); $('a1').focus(); };
 $('info').onclick = () => $('help').classList.toggle('show');
 window.addEventListener('pageshow', () => { ids.forEach(i => $(i).value = ''); update(); });
