@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เปรียบเทียบราคาต่อหน่วย</title>
+<style>
+  :root {
+    --bg:#f6f7f9; --card:#fff; --text:#1c2230; --muted:#6b7385; --line:#e3e6ec;
+    --accent:#2f6df6; --good:#12a150; --goodbg:#e6f6ec; --warn:#c2410c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#12151c; --card:#1b1f2a; --text:#eef0f5; --muted:#9aa3b5; --line:#2c3243;
+            --accent:#6c97ff; --good:#3ddc84; --goodbg:#16301f; --warn:#fb923c; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font-family:"Sarabun","Noto Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.45; }
+  .wrap { max-width:1000px; margin:0 auto; padding:16px; }
+  h1 { font-size:1.4rem; margin:8px 0 2px; }
+  .sub { color:var(--muted); margin:0 0 16px; font-size:.92rem; }
+  .bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:14px; }
+  .bar .grow { flex:1; }
+  button { font:inherit; cursor:pointer; border:1px solid var(--line); background:var(--card); color:var(--text);
+           padding:8px 14px; border-radius:10px; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+  button.ghost { color:var(--muted); }
+  select, input { font:inherit; color:var(--text); background:var(--bg); border:1px solid var(--line);
+                  border-radius:8px; padding:7px 9px; width:100%; min-width:0; }
+  input:focus, select:focus { outline:2px solid var(--accent); outline-offset:-1px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; position:relative; }
+  .card.best { border-color:var(--good); box-shadow:0 0 0 2px var(--goodbg); }
+  .card .top { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+  .card .top input { font-weight:600; }
+  .del { padding:4px 10px; color:var(--muted); }
+  .fields { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .fields label { font-size:.78rem; color:var(--muted); display:block; }
+  .fields .full { grid-column:1/-1; }
+  .row2 { display:flex; gap:6px; align-items:center; }
+  .row2 span { color:var(--muted); font-size:.9rem; white-space:nowrap; }
+  .promo { background:var(--bg); border:1px dashed var(--line); border-radius:10px; padding:8px; }
+  .res { margin-top:12px; border-top:1px solid var(--line); padding-top:10px; font-size:.9rem; }
+  .res .line { display:flex; justify-content:space-between; padding:2px 0; }
+  .res .line b { font-variant-numeric:tabular-nums; }
+  .badge { display:inline-block; font-size:.75rem; padding:2px 8px; border-radius:99px; background:var(--goodbg); color:var(--good); font-weight:700; }
+  .badge.no { background:transparent; color:var(--warn); }
+  .rank { position:absolute; top:-9px; left:12px; background:var(--accent); color:#fff; font-size:.72rem;
+          font-weight:700; padding:1px 9px; border-radius:99px; }
+  .card.best .rank { background:var(--good); }
+  h2 { font-size:1.05rem; margin:22px 0 8px; }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line);
+          border-radius:12px; overflow:hidden; font-size:.9rem; }
+  th, td { padding:9px 10px; text-align:right; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums; }
+  th:first-child, td:first-child { text-align:left; }
+  th { background:var(--bg); color:var(--muted); font-weight:600; font-size:.8rem; }
+  tr:last-child td { border-bottom:none; }
+  tr.best td { background:var(--goodbg); font-weight:600; }
+  .scroll { overflow-x:auto; }
+  .hint { color:var(--muted); font-size:.82rem; margin-top:8px; }
+  .empty { text-align:center; color:var(--muted); padding:30px; }
+  @media (max-width:420px) { .grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🛒 เปรียบเทียบราคาต่อหน่วย</h1>
+  <p class="sub">รองรับหน่วยเล็ก (ชิ้น/ซอง) + หน่วยใหญ่ (แพ็ค/ห่อ/กล่อง) และโปรโมชั่น เช่น 2 แถม 1</p>
+
+  <div class="bar">
+    <button class="primary" id="add">+ เพิ่มสินค้า</button>
+    <button class="ghost" id="reset">ล้างทั้งหมด</button>
+    <span class="grow"></span>
+    <label for="basis" style="color:var(--muted);font-size:.9rem">จัดอันดับตาม</label>
+    <select id="basis" style="width:auto">
+      <option value="piece">ราคาต่อหน่วยเล็ก</option>
+      <option value="pack">ราคาต่อหน่วยใหญ่</option>
+      <option value="std">ราคาต่อ 100 ก./มล.</option>
+    </select>
+  </div>
+
+  <div class="grid" id="cards"></div>
+
+  <div id="summary"></div>
+  <p class="hint">ข้อมูลเก็บในเครื่องของคุณ (localStorage) ไม่ถูกส่งไปที่ใด</p>
+</div>
+
+<script>
+const KEY = 'compare-price-v1';
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const fmt = (n, d = 2) => n.toLocaleString('th-TH', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+const blank = (n) => ({
+  name: 'สินค้า ' + n, price: '', packLabel: 'แพ็ค', perPack: '', pieceLabel: 'ชิ้น',
+  size: '', sizeUnit: 'g', buy: '1', free: '0'
+});
+
+let state = { items: [], basis: 'piece' };
+try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.items)) state = s; } catch (e) {}
+if (!state.items.length) {
+  state.items = [
+    { name: 'ขนม ห่อใหญ่ (2 แถม 1)', price: '120', packLabel: 'ห่อ', perPack: '12', pieceLabel: 'ชิ้น', size: '20', sizeUnit: 'g', buy: '2', free: '1' },
+    { name: 'ขนม ห่อเล็ก (3 แถม 1)', price: '45',  packLabel: 'ห่อ', perPack: '4',  pieceLabel: 'ชิ้น', size: '20', sizeUnit: 'g', buy: '3', free: '1' }
+  ];
+}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+
+// ---- core calculation ----
+function calc(it) {
+  const price = num(it.price), buy = Math.max(num(it.buy), 0) || 1, free = Math.max(num(it.free), 0);
+  const perPack = num(it.perPack), size = num(it.size);
+  if (!price || !perPack) return null;
+  const packs = buy + free;                       // จำนวนหน่วยใหญ่ที่ได้รับทั้งหมด
+  const perPackCost = price * buy / packs;        // ราคาจริงต่อหน่วยใหญ่
+  const perPiece = perPackCost / perPack;         // ราคาจริงต่อหน่วยเล็ก
+  const totalPieces = packs * perPack;
+  const perStd = size ? perPiece / size * 100 : null;  // ต่อ 100 ก./มล.
+  const discount = free ? free / packs * 100 : 0;
+  return { payTotal: price * buy, packs, totalPieces, perPackCost, perPiece, perStd, discount };
+}
+
+const keyOf = { piece: 'perPiece', pack: 'perPackCost', std: 'perStd' };
+
+function render(keepFocus) {
+  const rs = state.items.map(calc);
+  const k = keyOf[state.basis];
+  const ranked = rs.map((r, i) => ({ r, i })).filter(x => x.r && x.r[k] != null).sort((a, b) => a.r[k] - b.r[k]);
+  const rankOf = {}; ranked.forEach((x, n) => rankOf[x.i] = n);
+  const best = ranked.length ? ranked[0].r[k] : null;
+
+  $('#basis').value = state.basis;
+  const cards = $('#cards');
+  if (!state.items.length) { cards.innerHTML = '<div class="empty">ยังไม่มีสินค้า กด “+ เพิ่มสินค้า”</div>'; $('#summary').innerHTML = ''; return; }
+
+  // Re-render card DOM only when structure changes; otherwise update results in place.
+  if (!keepFocus) cards.innerHTML = state.items.map(cardHTML).join('');
+  state.items.forEach((it, i) => {
+    const card = cards.children[i], r = rs[i];
+    card.classList.toggle('best', rankOf[i] === 0 && ranked.length > 1);
+    const rank = card.querySelector('.rank');
+    rank.style.display = i in rankOf ? '' : 'none';
+    rank.textContent = rankOf[i] === 0 ? '🏆 ถูกที่สุด' : '#' + ((rankOf[i] ?? 0) + 1);
+    card.querySelector('.res').innerHTML = resHTML(it, r, rankOf[i], best, k);
+  });
+
+  // summary table
+  if (ranked.length >= 2) {
+    const hasStd = ranked.some(x => x.r.perStd != null);
+    $('#summary').innerHTML = '<h2>สรุปเรียงจากถูกไปแพง</h2><div class="scroll"><table><thead><tr><th>สินค้า</th><th>จ่ายจริง</th><th>ได้ทั้งหมด</th><th>ต่อหน่วยใหญ่</th><th>ต่อหน่วยเล็ก</th>' +
+      (hasStd ? '<th>ต่อ 100</th>' : '') + '<th>เทียบถูกสุด</th></tr></thead><tbody>' +
+      ranked.map((x, n) => {
+        const it = state.items[x.i], r = x.r, diff = best ? (r[k] / best - 1) * 100 : 0;
+        return `<tr class="${n === 0 ? 'best' : ''}"><td>${esc(it.name)}</td><td>${fmt(r.payTotal)}</td>` +
+          `<td>${fmt(r.totalPieces, 0)} ${esc(it.pieceLabel)}</td><td>${fmt(r.perPackCost)}</td><td>${fmt(r.perPiece)}</td>` +
+          (hasStd ? `<td>${r.perStd != null ? fmt(r.perStd) : '-'}</td>` : '') +
+          `<td>${n === 0 ? '✓ ถูกสุด' : '+' + fmt(diff, 1) + '%'}</td></tr>`;
+      }).join('') + '</tbody></table></div>';
+  } else $('#summary').innerHTML = '';
+}
+
+function resHTML(it, r, rank, best, k) {
+  if (!r) return '<div class="hint">กรอกราคาและจำนวนต่อหน่วยใหญ่ เพื่อดูผล</div>';
+  const unit = it.sizeUnit === 'ml' ? 'มล.' : 'ก.';
+  let tag = '';
+  if (rank === 0) tag = '<span class="badge">ถูกที่สุด</span>';
+  else if (rank != null && best) tag = `<span class="badge no">แพงกว่า +${fmt((r[k] / best - 1) * 100, 1)}%</span>`;
+  return `<div class="line"><span>จ่ายจริง</span><b>${fmt(r.payTotal)} บาท</b></div>` +
+    `<div class="line"><span>ได้ทั้งหมด</span><b>${fmt(r.packs, 0)} ${esc(it.packLabel)} = ${fmt(r.totalPieces, 0)} ${esc(it.pieceLabel)}</b></div>` +
+    (r.discount ? `<div class="line"><span>ส่วนลดจากโปร</span><b>${fmt(r.discount, 1)}%</b></div>` : '') +
+    `<div class="line"><span>ต่อ 1 ${esc(it.packLabel)}</span><b>${fmt(r.perPackCost)} บาท</b></div>` +
+    `<div class="line"><span>ต่อ 1 ${esc(it.pieceLabel)}</span><b>${fmt(r.perPiece, 3)} บาท</b></div>` +
+    (r.perStd != null ? `<div class="line"><span>ต่อ 100 ${unit}</span><b>${fmt(r.perStd)} บาท</b></div>` : '') +
+    (tag ? `<div style="margin-top:6px">${tag}</div>` : '');
+}
+
+function cardHTML(it, i) {
+  const f = (name, label, type = 'text', extra = '') =>
+    `<div><label>${label}</label><input data-i="${i}" data-f="${name}" type="${type}" ${type === 'number' ? 'min="0" step="any" inputmode="decimal"' : ''} value="${esc(it[name])}" ${extra}></div>`;
+  return `<div class="card"><span class="rank"></span>
+    <div class="top"><input data-i="${i}" data-f="name" value="${esc(it.name)}" aria-label="ชื่อสินค้า"><button class="del" data-del="${i}" title="ลบ">✕</button></div>
+    <div class="fields">
+      ${f('price', 'ราคา (บาท) ต่อ 1 หน่วยใหญ่', 'number')}
+      ${f('packLabel', 'ชื่อหน่วยใหญ่ (แพ็ค/ห่อ/กล่อง)')}
+      ${f('perPack', 'มีกี่หน่วยเล็กในหน่วยใหญ่', 'number')}
+      ${f('pieceLabel', 'ชื่อหน่วยเล็ก (ชิ้น/ซอง)')}
+      <div class="full"><label>ขนาดต่อหน่วยเล็ก (ไม่บังคับ — ใช้เทียบต่อ 100 ก./มล.)</label>
+        <div class="row2"><input data-i="${i}" data-f="size" type="number" min="0" step="any" inputmode="decimal" value="${esc(it.size)}">
+          <select data-i="${i}" data-f="sizeUnit" style="width:80px"><option value="g" ${it.sizeUnit === 'g' ? 'selected' : ''}>กรัม</option><option value="ml" ${it.sizeUnit === 'ml' ? 'selected' : ''}>มล.</option></select></div></div>
+      <div class="full promo"><label>โปรโมชั่น</label>
+        <div class="row2"><span>ซื้อ</span><input data-i="${i}" data-f="buy" type="number" min="1" step="1" inputmode="numeric" value="${esc(it.buy)}">
+          <span>แถม</span><input data-i="${i}" data-f="free" type="number" min="0" step="1" inputmode="numeric" value="${esc(it.free)}"><span>(แถม 0 = ไม่มีโปร)</span></div></div>
+    </div>
+    <div class="res"></div></div>`;
+}
+
+// ---- events ----
+document.addEventListener('input', e => {
+  const t = e.target, i = t.dataset.i;
+  if (i == null) return;
+  state.items[i][t.dataset.f] = t.value;
+  save(); render(true);
+});
+document.addEventListener('click', e => {
+  const d = e.target.closest('[data-del]');
+  if (d) { state.items.splice(+d.dataset.del, 1); save(); render(false); }
+});
+$('#add').onclick = () => { state.items.push(blank(state.items.length + 1)); save(); render(false); };
+$('#reset').onclick = () => { if (confirm('ล้างสินค้าทั้งหมด?')) { state.items = [blank(1), blank(2)]; save(); render(false); } };
+$('#basis').onchange = e => { state.basis = e.target.value; save(); render(true); };
+
+render(false);
+</script>
+</body>
+</html>
