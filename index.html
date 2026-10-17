@@ -16,7 +16,7 @@
   .head { display:flex; justify-content:space-between; align-items:center; font-size:1.2rem; }
   .head button { background:none; border:0; color:var(--ink); font:inherit; padding:8px; cursor:pointer; }
   #info { font-family:Georgia,serif; font-style:italic; font-size:1.4rem; }
-  .grid { display:grid; grid-template-columns:36px 1fr 64px 1fr; gap:12px 10px; align-items:center; margin-top:48px; }
+  .grid { display:grid; grid-template-columns:36px 64px 1fr 1fr; gap:12px 10px; align-items:center; margin-top:48px; }
   .col { text-align:center; color:var(--faint); font-weight:600; font-size:1.2rem; }
   .row { font-size:2rem; font-weight:700; text-align:center; }
   input { width:100%; height:48px; font:inherit; font-size:1.2rem; text-align:center; color:var(--ink);
@@ -45,24 +45,24 @@
 
   <div id="help">
     <b>วิธีใช้</b><br>
-    <b>size</b> = ขนาดต่อ 1 หน่วย (กรัม/มล./ชิ้น) · <b>×</b> = จำนวนหน่วยที่ได้ · <b>cost</b> = ราคารวมที่จ่าย<br>
-    ตัวอย่าง ซื้อ 2 แถม 1 ชิ้นละ 40 บาท ขนาด 100 → size 100, × 3, cost 80<br>
-    (จ่าย 2 ชิ้น ได้ 3 ชิ้น) · ไม่มีโปรให้ใส่ × 1
+    <b>ea</b> = จำนวนหน่วยที่ได้ (เว้นว่าง = 1) · <b>size</b> = ขนาดต่อ 1 หน่วย (กรัม/มล./ชิ้น) · <b>cost</b> = ราคารวมที่จ่าย<br>
+    ตัวอย่าง ซื้อ 2 แถม 1 ชิ้นละ 40 บาท ขนาด 100 → ea 3, size 100, cost 80<br>
+    (จ่าย 2 ชิ้น ได้ 3 ชิ้น) · แถวที่ไม่ใช้เว้นว่างไว้ได้
   </div>
 
   <div class="grid">
-    <div></div><div class="col">size</div><div class="col">×</div><div class="col">cost</div>
+    <div></div><div class="col">ea</div><div class="col">size</div><div class="col">cost</div>
     <div class="row">A</div>
-    <input id="a0" inputmode="decimal" autocomplete="off" aria-label="A size">
-    <input id="a1" inputmode="numeric" autocomplete="off" aria-label="A จำนวน" value="1">
+    <input id="a0" inputmode="numeric" autocomplete="off" aria-label="A ea">
+    <input id="a1" inputmode="decimal" autocomplete="off" aria-label="A size">
     <input id="a2" inputmode="decimal" autocomplete="off" aria-label="A cost">
     <div class="row">B</div>
-    <input id="b0" inputmode="decimal" autocomplete="off" aria-label="B size">
-    <input id="b1" inputmode="numeric" autocomplete="off" aria-label="B จำนวน" value="1">
+    <input id="b0" inputmode="numeric" autocomplete="off" aria-label="B ea">
+    <input id="b1" inputmode="decimal" autocomplete="off" aria-label="B size">
     <input id="b2" inputmode="decimal" autocomplete="off" aria-label="B cost">
     <div class="row">C</div>
-    <input id="c0" inputmode="decimal" autocomplete="off" aria-label="C size">
-    <input id="c1" inputmode="numeric" autocomplete="off" aria-label="C จำนวน" value="1">
+    <input id="c0" inputmode="numeric" autocomplete="off" aria-label="C ea">
+    <input id="c1" inputmode="decimal" autocomplete="off" aria-label="C size">
     <input id="c2" inputmode="decimal" autocomplete="off" aria-label="C cost">
   </div>
 
@@ -74,17 +74,15 @@
 const $ = id => document.getElementById(id);
 const ids = ['a0','a1','a2','b0','b1','b2','c0','c1','c2'];
 const rows = ['a','b','c'];
-const KEY = 'compare-price-v2';
 const n = v => { const x = parseFloat(String(v).replace(',', '.')); return isFinite(x) ? x : 0; };
 const f = (x, d = 4) => x.toLocaleString('th-TH', { maximumFractionDigits: d });
 
 function unit(p) {            // ราคาต่อ 1 หน่วย size
-  const size = n($(p + '0').value), qty = n($(p + '1').value), cost = n($(p + '2').value);
-  return size > 0 && qty > 0 && cost > 0 ? cost / (size * qty) : null;
+  const ea = $(p + '0').value.trim() === '' ? 1 : n($(p + '0').value);
+  const size = n($(p + '1').value), cost = n($(p + '2').value);
+  return ea > 0 && size > 0 && cost > 0 ? cost / (ea * size) : null;
 }
-
 function update() {
-  try { localStorage.setItem(KEY, JSON.stringify(ids.map(i => $(i).value))); } catch (e) {}
   const out = $('out');
   const list = rows.map(r => ({ L: r.toUpperCase(), u: unit(r) })).filter(x => x.u != null);
   if (!list.length) { out.innerHTML = ''; return; }
@@ -99,17 +97,21 @@ function update() {
     (list.length > 1 && x.u - lo >= 1e-12 ? `<small>แพงกว่า +${f((x.u / lo - 1) * 100, 1)}%</small>` : '') + '</div>').join('');
   out.innerHTML = head + `<div class="units">${cells}</div>`;
 }
-try { const s = JSON.parse(localStorage.getItem(KEY)); if (Array.isArray(s)) ids.forEach((i, k) => { if (s[k] != null) $(i).value = s[k]; }); } catch (e) {}
 ids.forEach((id, k) => {
-  $(id).addEventListener('input', update);
+  $(id).addEventListener('input', () => {
+    const ea = $(id[0] + '0');
+    if (id[1] !== '0' && $(id).value.trim() !== '' && ea.value.trim() === '') ea.value = '1';
+    update();
+  });
   $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(1); } });
   $(id).addEventListener('focus', e => e.target.select());
 });
 const go = d => { const k = Math.max(ids.indexOf(document.activeElement.id), 0); $(ids[(k + d + ids.length) % ids.length]).focus(); };
 $('next').onclick = () => go(1);
 $('prev').onclick = () => go(-1);
-$('clear').onclick = () => { ids.forEach(i => $(i).value = i[1] === '1' ? '1' : ''); update(); $('a0').focus(); };
+$('clear').onclick = () => { ids.forEach(i => $(i).value = ''); update(); $('a1').focus(); };
 $('info').onclick = () => $('help').classList.toggle('show');
+window.addEventListener('pageshow', () => { ids.forEach(i => $(i).value = ''); update(); });
 update();
 </script>
 </body>
