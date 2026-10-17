@@ -117,7 +117,10 @@ ids.forEach((id, k) => {
   $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(1); } });
   $(id).addEventListener('focus', e => e.target.select());
 });
-const go = d => { const k = Math.max(ids.indexOf(document.activeElement.id), 0); $(ids[(k + d + ids.length) % ids.length]).focus(); };
+let cur = 0;
+ids.forEach((id, k) => $(id).addEventListener('focus', () => cur = k));
+const go = d => $(ids[(cur + d + ids.length) % ids.length]).focus();
+['next', 'prev'].forEach(b => $(b).addEventListener('pointerdown', e => e.preventDefault()));
 $('next').onclick = () => go(1);
 $('prev').onclick = () => go(-1);
 $('clear').onclick = () => { ids.forEach(i => $(i).value = ''); update(); $('a1').focus(); };
