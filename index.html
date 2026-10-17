@@ -30,9 +30,10 @@
   #out { margin-top:32px; text-align:center; min-height:130px; }
   .win { font-size:1.5rem; font-weight:700; color:var(--good); }
   .sub { margin-top:6px; }
-  .units { margin-top:14px; display:flex; justify-content:center; gap:28px; font-size:1.05rem; }
+  .units { margin-top:14px; display:flex; justify-content:center; gap:22px; font-size:1.05rem; flex-wrap:wrap; }
   .units b { display:block; font-size:1.3rem; }
   .units .best b { color:var(--good); }
+  .units small { display:block; font-size:.8rem; }
   #help { display:none; margin-top:24px; font-size:.92rem; line-height:1.6; background:var(--box);
           border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
   #help.show { display:block; }
@@ -59,6 +60,10 @@
     <input id="b0" inputmode="decimal" autocomplete="off" aria-label="B size">
     <input id="b1" inputmode="numeric" autocomplete="off" aria-label="B จำนวน" value="1">
     <input id="b2" inputmode="decimal" autocomplete="off" aria-label="B cost">
+    <div class="row">C</div>
+    <input id="c0" inputmode="decimal" autocomplete="off" aria-label="C size">
+    <input id="c1" inputmode="numeric" autocomplete="off" aria-label="C จำนวน" value="1">
+    <input id="c2" inputmode="decimal" autocomplete="off" aria-label="C cost">
   </div>
 
   <div class="nav"><button id="prev">‹</button><button id="next">Next ›</button></div>
@@ -67,7 +72,8 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const ids = ['a0','a1','a2','b0','b1','b2'];
+const ids = ['a0','a1','a2','b0','b1','b2','c0','c1','c2'];
+const rows = ['a','b','c'];
 const KEY = 'compare-price-v2';
 const n = v => { const x = parseFloat(String(v).replace(',', '.')); return isFinite(x) ? x : 0; };
 const f = (x, d = 4) => x.toLocaleString('th-TH', { maximumFractionDigits: d });
@@ -79,21 +85,20 @@ function unit(p) {            // ราคาต่อ 1 หน่วย size
 
 function update() {
   try { localStorage.setItem(KEY, JSON.stringify(ids.map(i => $(i).value))); } catch (e) {}
-  const a = unit('a'), b = unit('b'), out = $('out');
-  if (a == null && b == null) { out.innerHTML = ''; return; }
-  const cell = (L, u, best) => `<div class="${best ? 'best' : ''}">${L}<b>${u == null ? '-' : f(u)}</b></div>`;
+  const out = $('out');
+  const list = rows.map(r => ({ L: r.toUpperCase(), u: unit(r) })).filter(x => x.u != null);
+  if (!list.length) { out.innerHTML = ''; return; }
+  const sorted = [...list].sort((x, y) => x.u - y.u), lo = sorted[0].u;
   let head = '';
-  if (a != null && b != null) {
-    if (Math.abs(a - b) < 1e-12) head = '<div class="win">ราคาเท่ากัน</div>';
-    else {
-      const w = a < b ? 'A' : 'B', lo = Math.min(a, b), hi = Math.max(a, b);
-      head = `<div class="win">${w} ถูกกว่า</div><div class="sub">ประหยัด ${f((1 - lo / hi) * 100, 1)}% (อีกฝั่งแพงกว่า ${f((hi / lo - 1) * 100, 1)}%)</div>`;
-    }
+  if (list.length >= 2) {
+    const hi = sorted[sorted.length - 1].u;
+    if (hi - lo < 1e-12) head = '<div class="win">ราคาเท่ากัน</div>';
+    else head = `<div class="win">${sorted[0].L} ถูกที่สุด</div><div class="sub">ถูกกว่าตัวแพงสุด ${f((1 - lo / hi) * 100, 1)}%</div>`;
   }
-  const bestA = a != null && (b == null || a < b), bestB = b != null && (a == null || b < a);
-  out.innerHTML = head + `<div class="units">${cell('A ต่อหน่วย', a, bestA && b != null)}${cell('B ต่อหน่วย', b, bestB && a != null)}</div>`;
+  const cells = list.map(x => `<div class="${list.length > 1 && x.u - lo < 1e-12 ? 'best' : ''}">${x.L} ต่อหน่วย<b>${f(x.u)}</b>` +
+    (list.length > 1 && x.u - lo >= 1e-12 ? `<small>แพงกว่า +${f((x.u / lo - 1) * 100, 1)}%</small>` : '') + '</div>').join('');
+  out.innerHTML = head + `<div class="units">${cells}</div>`;
 }
-
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (Array.isArray(s)) ids.forEach((i, k) => { if (s[k] != null) $(i).value = s[k]; }); } catch (e) {}
 ids.forEach((id, k) => {
   $(id).addEventListener('input', update);
