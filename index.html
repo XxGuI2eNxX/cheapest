@@ -64,7 +64,7 @@
     <b>วิธีใช้</b><br>
     <b>ea</b> = จำนวนหน่วยที่ได้ (เว้นว่าง = 1) · <b>size</b> = ขนาดต่อ 1 หน่วย (กรัม/มล./ชิ้น) · <b>cost</b> = ราคารวมที่จ่าย<br>
     ตัวอย่าง ซื้อ 2 แถม 1 ชิ้นละ 40 บาท ขนาด 100 → ea 3, size 100, cost 80<br>
-    (จ่าย 2 ชิ้น ได้ 3 ชิ้น) · แถวที่ไม่ใช้เว้นว่างไว้ได้<br>ผลท้ายแถว: <b>/n</b> = ราคาต่อ 1 หน่วย size · <b>/1000n</b> = ราคาต่อ 1000 หน่วย (เช่น size เป็นกรัม → ราคาต่อ 1 กก.)
+    (จ่าย 2 ชิ้น ได้ 3 ชิ้น) · แถวที่ไม่ใช้เว้นว่างไว้ได้<br>ผลท้ายแถว: <b>/1</b> = ราคาต่อ 1 หน่วย size · <b>/1000</b> = ราคาต่อ 1000 หน่วย (เช่น size เป็นกรัม → ราคาต่อ 1 กก.)
   </div>
 
   <div class="grid">
@@ -120,7 +120,7 @@ function update() {
   list.forEach(x => {
     const el = $('r_' + x.r), best = list.length > 1 && x.u - lo < 1e-12;
     el.className = 'res' + (best ? ' best' : '');
-    el.innerHTML = `<div>${fu(x.u)}<small class="s">/n</small></div><div>${fu(x.u * 1000)}<small class="s">/1000n</small></div>` + (list.length > 1 && !best ? `<small>+${f((x.u / lo - 1) * 100, 1)}%</small>` : '');
+    el.innerHTML = `<div>${fu(x.u)}<small class="s">/1</small></div><div>${fu(x.u * 1000)}<small class="s">/1000</small></div>` + (list.length > 1 && !best ? `<small>+${f((x.u / lo - 1) * 100, 1)}%</small>` : '');
   });
   if (list.length < 2) { out.innerHTML = ''; return; }
   out.innerHTML = hi - lo < 1e-12 ? '<div class="win">ราคาเท่ากัน</div>'
