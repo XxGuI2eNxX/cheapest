@@ -33,12 +33,13 @@
   input { width:100%; height:48px; font:inherit; font-size:1.2rem; text-align:center; color:var(--ink);
           background:var(--box); border:4px solid var(--line); border-radius:4px; padding:0 4px; }
   input:focus { outline:none; border-color:var(--focus); }
-  .res { text-align:center; font-weight:700; font-size:1.05rem; line-height:1.2; min-height:48px; display:flex; flex-direction:column; justify-content:center; }
+  .res { grid-column:5; grid-row:span 2; text-align:center; font-weight:700; font-size:.95rem; line-height:1.25; display:flex; flex-direction:column; justify-content:center; }
   .res.best { color:var(--good); }
+  .res small.s { font-size:.62rem; margin-left:1px; }
   .res small { font-weight:400; font-size:.75rem; color:var(--ink); }
   .times { color:var(--faint); font-weight:600; }
   .row { grid-row:span 2; }
-  input.nm { grid-column:2 / -1; height:38px; font-size:1rem; border-width:3px; text-align:left; padding:0 10px; }
+  input.nm { grid-column:2 / 5; height:38px; font-size:1rem; border-width:3px; text-align:left; padding:0 10px; }
   .nav { display:flex; gap:14px; margin-top:36px; }
   .nav button { height:56px; border:0; border-radius:14px; font:inherit; font-size:1.4rem; cursor:pointer; }
   #clear { flex:1; background:var(--blue); color:#fff; font-weight:600; }
@@ -52,8 +53,6 @@
   #help { display:none; margin-top:24px; font-size:.92rem; line-height:1.6; background:var(--box);
           border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
   #help.show { display:block; }
-  .swap { display:block; margin-top:28px; text-align:center; color:var(--ink); font-size:1.15rem; text-decoration:none;
-          border:2px solid var(--line); border-radius:14px; padding:14px; }
 </style>
 </head>
 <body>
@@ -64,35 +63,33 @@
     <b>วิธีใช้</b><br>
     <b>ea</b> = จำนวนหน่วยที่ได้ (เว้นว่าง = 1) · <b>size</b> = ขนาดต่อ 1 หน่วย (กรัม/มล./ชิ้น) · <b>cost</b> = ราคารวมที่จ่าย<br>
     ตัวอย่าง ซื้อ 2 แถม 1 ชิ้นละ 40 บาท ขนาด 100 → ea 3, size 100, cost 80<br>
-    (จ่าย 2 ชิ้น ได้ 3 ชิ้น) · แถวที่ไม่ใช้เว้นว่างไว้ได้<br>อยากรู้ราคาต่อ 1 กิโล กดปุ่ม “ราคาต่อกิโล” ด้านล่าง
+    (จ่าย 2 ชิ้น ได้ 3 ชิ้น) · แถวที่ไม่ใช้เว้นว่างไว้ได้<br>ผลท้ายแถว: <b>/n</b> = ราคาต่อ 1 หน่วย size · <b>/1000n</b> = ราคาต่อ 1000 หน่วย (เช่น size เป็นกรัม → ราคาต่อ 1 กก.)
   </div>
 
   <div class="grid">
     <div></div><div class="col">ea</div><div class="col">size</div><div class="col">cost</div><div class="col"></div>
     <div class="row">A</div>
     <input id="na" class="nm" type="text" autocomplete="off" placeholder="Note" aria-label="A ชื่อ">
+    <div class="res" id="r_a"></div>
     <input id="a0" inputmode="numeric" autocomplete="off" aria-label="A ea">
     <input id="a1" inputmode="decimal" autocomplete="off" aria-label="A size">
     <input id="a2" inputmode="decimal" autocomplete="off" aria-label="A cost">
-    <div class="res" id="r_a"></div>
     <div class="row">B</div>
     <input id="nb" class="nm" type="text" autocomplete="off" placeholder="Note" aria-label="B ชื่อ">
+    <div class="res" id="r_b"></div>
     <input id="b0" inputmode="numeric" autocomplete="off" aria-label="B ea">
     <input id="b1" inputmode="decimal" autocomplete="off" aria-label="B size">
     <input id="b2" inputmode="decimal" autocomplete="off" aria-label="B cost">
-    <div class="res" id="r_b"></div>
     <div class="row">C</div>
     <input id="nc" class="nm" type="text" autocomplete="off" placeholder="Note" aria-label="C ชื่อ">
+    <div class="res" id="r_c"></div>
     <input id="c0" inputmode="numeric" autocomplete="off" aria-label="C ea">
     <input id="c1" inputmode="decimal" autocomplete="off" aria-label="C size">
     <input id="c2" inputmode="decimal" autocomplete="off" aria-label="C cost">
-    <div class="res" id="r_c"></div>
   </div>
 
   <div class="nav"><button id="clear">Clear</button></div>
   <div id="out"></div>
-
-  <a class="swap" href="weight.html">⚖ ราคาต่อกิโล ›</a>
 </div>
 
 <script>
@@ -120,7 +117,7 @@ function update() {
   list.forEach(x => {
     const el = $('r_' + x.r), best = list.length > 1 && x.u - lo < 1e-12;
     el.className = 'res' + (best ? ' best' : '');
-    el.innerHTML = fu(x.u) + (list.length > 1 && !best ? `<small>+${f((x.u / lo - 1) * 100, 1)}%</small>` : '');
+    el.innerHTML = `<div>${fu(x.u)}<small class="s">/n</small></div><div>${fu(x.u * 1000)}<small class="s">/1000n</small></div>` + (list.length > 1 && !best ? `<small>+${f((x.u / lo - 1) * 100, 1)}%</small>` : '');
   });
   if (list.length < 2) { out.innerHTML = ''; return; }
   out.innerHTML = hi - lo < 1e-12 ? '<div class="win">ราคาเท่ากัน</div>'
