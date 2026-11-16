@@ -123,8 +123,10 @@ function update() {
     el.innerHTML = `<div>${fu(x.u)}<small class="s">/1</small></div><div>${fu(x.u * 1000)}<small class="s">/1000</small></div>` + (list.length > 1 && !best ? `<small>+${f((x.u / lo - 1) * 100, 1)}%</small>` : '');
   });
   if (list.length < 2) { out.innerHTML = ''; return; }
-  out.innerHTML = hi - lo < 1e-12 ? '<div class="win">ราคาเท่ากัน</div>'
-    : `<div class="win">${label(list.find(x => x.u === lo).r)} ถูกที่สุด</div><div class="sub">ถูกกว่าตัวแพงสุด ${f((1 - lo / hi) * 100, 1)}%</div>`;
+  if (hi - lo < 1e-12) { out.innerHTML = '<div class="win">ราคาเท่ากัน</div>'; return; }
+  const w = list.find(x => x.u === lo);
+  out.innerHTML = `<div class="win">${label(w.r)} ถูกที่สุด</div>` +
+    list.filter(x => x !== w).map(x => `<div class="sub">ถูกกว่า ${label(x.r)} ${f((1 - lo / x.u) * 100, 1)}%</div>`).join('');
 }names.forEach(i => $(i).addEventListener('input', update));
 ids.forEach((id, k) => {
   $(id).addEventListener('input', () => {
