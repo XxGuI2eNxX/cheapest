@@ -47,11 +47,8 @@
   #help { display:none; margin-top:24px; font-size:.92rem; line-height:1.6; background:var(--box);
           border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
   #help.show { display:block; }
-  .wbox { margin-top:28px; padding-top:22px; border-top:2px solid var(--line); }
-  .wtitle { text-align:center; font-weight:700; font-size:1.2rem; margin-bottom:14px; }
-  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px 10px; }
-  #wout { margin-top:16px; text-align:center; min-height:64px; }
-  #wout .big { font-size:1.5rem; font-weight:700; color:var(--good); }
+  .swap { display:block; margin-top:28px; text-align:center; color:var(--ink); font-size:1.15rem; text-decoration:none;
+          border:2px solid var(--line); border-radius:14px; padding:14px; }
 </style>
 </head>
 <body>
@@ -62,7 +59,7 @@
     <b>วิธีใช้</b><br>
     <b>ea</b> = จำนวนหน่วยที่ได้ (เว้นว่าง = 1) · <b>size</b> = ขนาดต่อ 1 หน่วย (กรัม/มล./ชิ้น) · <b>cost</b> = ราคารวมที่จ่าย<br>
     ตัวอย่าง ซื้อ 2 แถม 1 ชิ้นละ 40 บาท ขนาด 100 → ea 3, size 100, cost 80<br>
-    (จ่าย 2 ชิ้น ได้ 3 ชิ้น) · แถวที่ไม่ใช้เว้นว่างไว้ได้<br>ช่อง <b>ราคาต่อกิโล</b>: ใส่น้ำหนักเป็นกรัม + ราคา จะได้ราคาต่อ 1 kg
+    (จ่าย 2 ชิ้น ได้ 3 ชิ้น) · แถวที่ไม่ใช้เว้นว่างไว้ได้<br>อยากรู้ราคาต่อ 1 กิโล กดปุ่ม “ราคาต่อกิโล” ด้านล่าง
   </div>
 
   <div class="grid">
@@ -84,15 +81,7 @@
   <div class="nav"><button id="clear">Clear</button></div>
   <div id="out"></div>
 
-  <div class="wbox">
-    <div class="wtitle">ราคาต่อกิโล</div>
-    <div class="grid2">
-      <div class="col">g</div><div class="col">cost</div>
-      <input id="w1" inputmode="decimal" autocomplete="off" aria-label="น้ำหนัก กรัม">
-      <input id="w2" inputmode="decimal" autocomplete="off" aria-label="ราคา">
-    </div>
-    <div id="wout"></div>
-  </div>
+  <a class="swap" href="weight.html">⚖ ราคาต่อกิโล ›</a>
 </div>
 
 <script>
@@ -130,16 +119,9 @@ ids.forEach((id, k) => {
   });
   $(id).addEventListener('focus', e => e.target.select());
 });
-function updateW() {
-  const g = n($('w1').value), c = n($('w2').value), o = $('wout');
-  if (g <= 0 || c <= 0) { o.innerHTML = ''; return; }
-  o.innerHTML = `<div class="big">1 kg = ${f(c / g * 1000, 2)} บาท</div><div class="sub">100 g = ${f(c / g * 100, 2)} บาท</div>`;
-}
-['w1', 'w2'].forEach(i => $(i).addEventListener('input', updateW));
-['w1', 'w2'].forEach(i => $(i).addEventListener('focus', e => e.target.select()));
-$('clear').onclick = () => { [...ids, 'w1', 'w2'].forEach(i => $(i).value = ''); update(); updateW(); $('a1').focus(); };
+$('clear').onclick = () => { ids.forEach(i => $(i).value = ''); update(); $('a1').focus(); };
 $('info').onclick = () => $('help').classList.toggle('show');
-window.addEventListener('pageshow', () => { [...ids, 'w1', 'w2'].forEach(i => $(i).value = ''); update(); updateW(); });
+window.addEventListener('pageshow', () => { ids.forEach(i => $(i).value = ''); update(); });
 update();
 </script>
 </body>
