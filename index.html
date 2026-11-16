@@ -33,6 +33,7 @@
   input { width:100%; height:48px; font:inherit; font-size:1.2rem; text-align:center; color:var(--ink);
           background:var(--box); border:4px solid var(--line); border-radius:4px; padding:0 4px; }
   input:focus { outline:none; border-color:var(--focus); }
+  .sep { grid-column:1 / -1; height:2px; background:var(--line); margin:10px 0; border-radius:2px; }
   .res { grid-column:5; grid-row:span 2; text-align:center; font-weight:700; font-size:.95rem; line-height:1.25; display:flex; flex-direction:column; justify-content:center; }
   .res.best { color:var(--good); }
   .res small.s { font-size:.62rem; margin-left:1px; }
@@ -74,12 +75,14 @@
     <input id="a0" inputmode="numeric" autocomplete="off" aria-label="A ea">
     <input id="a1" inputmode="decimal" autocomplete="off" aria-label="A size">
     <input id="a2" inputmode="decimal" autocomplete="off" aria-label="A cost">
+    <div class="sep"></div>
     <div class="row">B</div>
     <input id="nb" class="nm" type="text" autocomplete="off" placeholder="Note" aria-label="B ชื่อ">
     <div class="res" id="r_b"></div>
     <input id="b0" inputmode="numeric" autocomplete="off" aria-label="B ea">
     <input id="b1" inputmode="decimal" autocomplete="off" aria-label="B size">
     <input id="b2" inputmode="decimal" autocomplete="off" aria-label="B cost">
+    <div class="sep"></div>
     <div class="row">C</div>
     <input id="nc" class="nm" type="text" autocomplete="off" placeholder="Note" aria-label="C ชื่อ">
     <div class="res" id="r_c"></div>
