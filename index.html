@@ -37,6 +37,8 @@
   .res.best { color:var(--good); }
   .res small { font-weight:400; font-size:.75rem; color:var(--ink); }
   .times { color:var(--faint); font-weight:600; }
+  .row { grid-row:span 2; }
+  input.nm { grid-column:2 / -1; height:38px; font-size:1rem; border-width:3px; text-align:left; padding:0 10px; }
   .nav { display:flex; gap:14px; margin-top:36px; }
   .nav button { height:56px; border:0; border-radius:14px; font:inherit; font-size:1.4rem; cursor:pointer; }
   #clear { flex:1; background:var(--blue); color:#fff; font-weight:600; }
@@ -68,16 +70,19 @@
   <div class="grid">
     <div></div><div class="col">ea</div><div class="col">size</div><div class="col">cost</div><div class="col">/size</div>
     <div class="row">A</div>
+    <input id="na" class="nm" type="text" autocomplete="off" placeholder="ชื่อ / ยี่ห้อ" aria-label="A ชื่อ">
     <input id="a0" inputmode="numeric" autocomplete="off" aria-label="A ea">
     <input id="a1" inputmode="decimal" autocomplete="off" aria-label="A size">
     <input id="a2" inputmode="decimal" autocomplete="off" aria-label="A cost">
     <div class="res" id="r_a"></div>
     <div class="row">B</div>
+    <input id="nb" class="nm" type="text" autocomplete="off" placeholder="ชื่อ / ยี่ห้อ" aria-label="B ชื่อ">
     <input id="b0" inputmode="numeric" autocomplete="off" aria-label="B ea">
     <input id="b1" inputmode="decimal" autocomplete="off" aria-label="B size">
     <input id="b2" inputmode="decimal" autocomplete="off" aria-label="B cost">
     <div class="res" id="r_b"></div>
     <div class="row">C</div>
+    <input id="nc" class="nm" type="text" autocomplete="off" placeholder="ชื่อ / ยี่ห้อ" aria-label="C ชื่อ">
     <input id="c0" inputmode="numeric" autocomplete="off" aria-label="C ea">
     <input id="c1" inputmode="decimal" autocomplete="off" aria-label="C size">
     <input id="c2" inputmode="decimal" autocomplete="off" aria-label="C cost">
@@ -94,6 +99,9 @@
 const $ = id => document.getElementById(id);
 const ids = ['a0','a1','a2','b0','b1','b2','c0','c1','c2'];
 const rows = ['a','b','c'];
+const names = ['na','nb','nc'];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const label = r => { const v = $('n' + r).value.trim(); return v ? esc(v) : r.toUpperCase(); };
 const n = v => { const x = parseFloat(String(v).replace(',', '.')); return isFinite(x) ? x : 0; };
 const f = (x, d = 4) => x.toLocaleString('th-TH', { maximumFractionDigits: d });
 
@@ -116,8 +124,9 @@ function update() {
   });
   if (list.length < 2) { out.innerHTML = ''; return; }
   out.innerHTML = hi - lo < 1e-12 ? '<div class="win">ราคาเท่ากัน</div>'
-    : `<div class="win">${list.find(x => x.u === lo).L} ถูกที่สุด</div><div class="sub">ถูกกว่าตัวแพงสุด ${f((1 - lo / hi) * 100, 1)}%</div>`;
-}ids.forEach((id, k) => {
+    : `<div class="win">${label(list.find(x => x.u === lo).r)} ถูกที่สุด</div><div class="sub">ถูกกว่าตัวแพงสุด ${f((1 - lo / hi) * 100, 1)}%</div>`;
+}names.forEach(i => $(i).addEventListener('input', update));
+ids.forEach((id, k) => {
   $(id).addEventListener('input', () => {
     const ea = $(id[0] + '0');
     if (id[1] !== '0' && $(id).value.trim() !== '' && ea.value.trim() === '') ea.value = '1';
@@ -125,9 +134,9 @@ function update() {
   });
   $(id).addEventListener('focus', e => e.target.select());
 });
-$('clear').onclick = () => { ids.forEach(i => $(i).value = ''); update(); $('a1').focus(); };
+$('clear').onclick = () => { [...ids, ...names].forEach(i => $(i).value = ''); update(); $('a1').focus(); };
 $('info').onclick = () => $('help').classList.toggle('show');
-window.addEventListener('pageshow', () => { ids.forEach(i => $(i).value = ''); update(); });
+window.addEventListener('pageshow', () => { [...ids, ...names].forEach(i => $(i).value = ''); update(); });
 update();
 </script>
 </body>
